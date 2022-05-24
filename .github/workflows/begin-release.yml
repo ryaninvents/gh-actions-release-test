@@ -27,10 +27,11 @@ jobs:
       - uses: actions/github-script@v6
         id: create-pr
         name: Create pull request
+        env:
+          BRANCH_NAME: ${{ steps.create-branch.outputs.branchName }}
         with:
-          branchName: ${{ steps.create-branch.outputs.branchName }}
           script: |
-            const branchName = core.getInput('branchName', { required: true });
+            const branchName = process.env.BRANCH_NAME;
             await github.rest.pulls.create({
               owner: context.payload.owner.name,
               repo: context.payload.name,
