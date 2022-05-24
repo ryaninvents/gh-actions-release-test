@@ -31,11 +31,10 @@ jobs:
           BRANCH_NAME: ${{ steps.create-branch.outputs.branchName }}
         with:
           script: |
-            console.log(context.payload.repository);
             const branchName = process.env.BRANCH_NAME;
             await github.rest.pulls.create({
-              owner: context.payload.repository.name,
-              repo: context.payload.name,
+              repo: context.payload.repository.name,
+              owner: context.payload.repository.full_name.split('/')[0],
               head: branchName,
               base: 'main',
             });
