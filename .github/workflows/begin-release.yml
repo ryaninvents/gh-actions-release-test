@@ -1,0 +1,43 @@
+name: Begin release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  begin_release:
+    name: Begin release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: '16.x'
+      - run: npm install date-fns
+      - uses: actions/github-script@v6
+        id: create-branch
+        name: Create local branch
+        with:
+          script: |
+            const dfns = require('date-fns');
+            const branchName = `release/${dfns.format(new Date(), 'yyyyMMdd.HHmmss')}`;
+            await exec.exec('git', ['checkout', '-b', branchName]);
+            await exec.exec('git', ['push', 'origin', branchName]);
+            core.setOutput('branchName', branchName);
+            core.setOutput('prTitle', `Release ${branchName}`);
+      - uses: actions/github-script@v6
+        id: create-pr
+        name: Create pull request
+        env:
+          BRANCH_NAME: ${{ steps.create-branch.outputs.branchName }}
+          PR_TITLE: ${{ steps.create-branch.outputs.prTitle }}
+        with:
+          script: |
+            const branchName = process.env.BRANCH_NAME;
+            await github.rest.pulls.create({
+              repo: context.payload.repository.name,
+              owner: context.payload.repository.full_name.split('/')[0],
+              head: branchName,
+              base: 'main',
+              title: process.env.PR_TITLE,
+            });
