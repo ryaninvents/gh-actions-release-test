@@ -24,11 +24,13 @@ jobs:
             await exec.exec('git', ['checkout', '-b', branchName]);
             await exec.exec('git', ['push', 'origin', branchName]);
             core.setOutput('branchName', branchName);
+            core.setOutput('prTitle', `Release ${branchName}`);
       - uses: actions/github-script@v6
         id: create-pr
         name: Create pull request
         env:
           BRANCH_NAME: ${{ steps.create-branch.outputs.branchName }}
+          PR_TITLE: ${{ steps.create-branch.outputs.prTitle }}
         with:
           script: |
             const branchName = process.env.BRANCH_NAME;
@@ -37,4 +39,5 @@ jobs:
               owner: context.payload.repository.full_name.split('/')[0],
               head: branchName,
               base: 'main',
+              title: process.env.PR_TITLE,
             });
